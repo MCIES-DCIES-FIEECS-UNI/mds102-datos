@@ -1,120 +1,57 @@
-# mds102-datos
+# Datos del curso MDS102
 
-Publicaciones de datos del curso **MDS102 · Programación, SQL y Analítica Reproducible**
-Maestría en Data Science — FIEECS, Universidad Nacional de Ingeniería.
-
-Este repositorio contiene únicamente **datos**. El código de cada estudiante vive en su propio
-repositorio; los datos no se copian ahí, se referencian desde aquí mediante su dirección.
-
----
-
-## Publicaciones disponibles
-
-| Publicación | Filas | Formato | Tamaño | Uso |
-|---|---|---|---|---|
-| `FLIGHTS-INTRO-v1.csv` | 5 000 | CSV | 251 KB | Sesión 1 |
-| `FLIGHTS-INTRO-v1-10k.csv` | 10 000 | CSV | 503 KB | Sesión 2 |
-
-Las publicaciones de mayor volumen (Parquet particionado, a partir de la semana 4) residen en la
-unidad compartida de Drive institucional, no en este repositorio.
-
----
+Programación, SQL y Analítica Reproducible · Maestría en Data Science · Universidad Nacional de Ingeniería
 
 ## Fuente
 
-Bureau of Transportation Statistics (Estados Unidos), programa **On-Time Performance**, que
-publica todos los vuelos comerciales programados de aerolíneas con cuota de mercado relevante.
+Chen, D. (2015). *Online Retail* [Dataset]. UCI Machine Learning Repository. https://doi.org/10.24432/C5BW33. Licencia CC BY 4.0.
 
-- **Cobertura:** vuelos con origen en Seattle (SEA) y Portland (PDX), año 2014.
-- **Universo:** 162 049 vuelos.
-- **Muestreo:** selección aleatoria con semilla fija (102), ordenada por fecha, aerolínea y número de vuelo.
+Ventas de una tienda en línea del Reino Unido entre el 1 de diciembre de 2010 y el 9 de diciembre de 2011.
 
-## Tratamiento aplicado
+## Archivos
 
-1. Se construyó `fl_date` a partir de año, mes y día.
-2. Se derivó `cancelled` = 1 cuando no existen hora real de salida ni de llegada.
-3. Se derivó `diverted` = 1 cuando existe hora de salida pero no de llegada.
-4. **No se corrigió, imputó ni eliminó ningún valor.** Las ausencias del archivo son las del origen.
-
----
-
-## Diccionario de datos
-
-| Columna | Tipo | Descripción |
+| Archivo | Filas | Contenido |
 |---|---|---|
-| `fl_date` | texto (AAAA-MM-DD) | Fecha del vuelo programado |
-| `carrier` | texto | Código de la aerolínea |
-| `flight` | entero | Número de vuelo |
-| `tailnum` | texto | Matrícula de la aeronave |
-| `origin` | texto | Aeropuerto de origen |
-| `dest` | texto | Aeropuerto de destino |
-| `dep_delay` | entero | Minutos de retraso en la salida; negativo indica adelanto |
-| `arr_delay` | entero | Minutos de retraso en la llegada |
-| `cancelled` | entero (0/1) | 1 si el vuelo se canceló |
-| `diverted` | entero (0/1) | 1 si el vuelo se desvió |
-| `distance` | entero | Distancia en millas |
-| `air_time` | entero | Minutos en el aire |
+| `prepared/transactions.csv` | 541 909 | todas las líneas del archivo original |
+| `prepared/transactions.parquet` | 541 909 | el mismo contenido, en formato Parquet |
+| `teaching/retail_small.csv` | 3 108 | líneas del 1 de diciembre de 2010 |
+| `teaching/retail_small.xlsx` | 3 108 | el mismo contenido, en Excel |
 
----
+## Columnas
 
-## Resultados de referencia — `FLIGHTS-INTRO-v1.csv`
-
-Valores que debe obtener cualquier ejecución correcta.
-
-| Indicador | Valor |
+| Columna | Significado |
 |---|---|
-| Filas / columnas | 5 000 / 12 |
-| Vuelos cancelados | 21 (0,42 %) |
-| Vuelos desviados | 6 |
-| Retraso promedio de salida | 6,6 min |
-| Retraso mínimo / máximo | −18 / 713 min |
-| Ausentes en `dep_delay` | 21 |
-| Ausentes en `arr_delay` | 37 |
-| Ausentes en `tailnum` | 6 |
-| Aerolíneas distintas | 11 |
-| Destinos distintos | 70 |
-| Aerolínea con más vuelos | AS (1 923) |
+| `InvoiceNo` | número de factura; si empieza con `C`, la factura está cancelada |
+| `StockCode` | código del producto |
+| `Description` | nombre del producto |
+| `Quantity` | unidades; negativa en una devolución |
+| `InvoiceDate` | fecha y hora de la factura (`AAAA-MM-DD hh:mm:ss`) |
+| `UnitPrice` | precio por unidad, en libras esterlinas |
+| `CustomerID` | código del cliente; vacío si la venta no tiene cliente identificado |
+| `Country` | país del cliente |
 
-### Nota sobre las ausencias
+## Transformaciones aplicadas
 
-Los 21 ausentes de `dep_delay` coinciden exactamente con los vuelos cancelados: un vuelo que
-nunca despegó no puede tener retraso de salida. Es una **ausencia estructural** y no un error.
+- Los archivos de `prepared/` contienen las mismas filas, columnas y valores que el archivo original `Online Retail.xlsx`, sin limpieza ni filtros.
+- `InvoiceDate` se escribe en formato `AAAA-MM-DD hh:mm:ss`.
+- Una descripción numérica (producto `20713`) se guarda como texto, para que la columna tenga un solo tipo.
+- `retail_small` contiene solo las líneas con fecha 1 de diciembre de 2010.
+- Se conservan las facturas canceladas, las cantidades negativas, los precios cero o negativos y los valores faltantes del original.
 
-`arr_delay` tiene 37 ausentes, diez más que la suma de cancelados y desviados. Esa diferencia
-proviene del origen y se conservó deliberadamente: constituye un caso auténtico de ausencia sin
-explicación evidente, que se trabaja en la sesión sobre contratos de datos.
-
----
-
-## Uso desde Colab
+## Lectura
 
 ```python
-URL_DATOS = 'https://raw.githubusercontent.com/<ORGANIZACION>/mds102-datos/main/FLIGHTS-INTRO-v1.csv'
-ARCHIVO = 'FLIGHTS-INTRO-v1.csv'
+import pandas as pd
 
-import urllib.request
-from pathlib import Path
-
-if not Path(ARCHIVO).exists():
-    urllib.request.urlretrieve(URL_DATOS, ARCHIVO)
+URL_DATOS = "https://raw.githubusercontent.com/MCIES-DCIES-FIEECS-UNI/mds102-datos/main/"
+transacciones = pd.read_csv(URL_DATOS + "prepared/transactions.csv")
 ```
 
-## Verificación de integridad
+## Verificación (SHA-256)
 
-Las sumas de verificación están en `CHECKSUMS.txt`.
-
-```bash
-sha256sum -c CHECKSUMS.txt
-```
-
----
-
-## Versionado
-
-Las publicaciones son **inmutables**. Una corrección genera una versión nueva (`-v2`) y la
-anterior se conserva, de modo que cualquier resultado obtenido en clase siga siendo reproducible.
-
-## Licencia
-
-Los datos de origen son de dominio público (obra del gobierno federal de Estados Unidos). Esta
-recopilación se distribuye con fines educativos.
+| Archivo | SHA-256 |
+|---|---|
+| `prepared/transactions.csv` | `c35975c40d0e1e105090fbb11188a409393055f873841bd012915475fc84e69f` |
+| `prepared/transactions.parquet` | `fcb003532d9ce3d50d11cc97982125fa39289efbbb5a6a0ebc30ad75e8402b08` |
+| `teaching/retail_small.csv` | `45ca8842daf556b96947109ad92d666391410a2a3e894bab7644773d1ff539b3` |
+| `teaching/retail_small.xlsx` | `e85ee1f817e5da1f20c36432f0f3583aa56e81de23852d3676dfb922c3a2974d` |
