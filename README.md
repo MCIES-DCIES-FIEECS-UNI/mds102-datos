@@ -16,11 +16,15 @@ Ventas de una tienda en línea del Reino Unido entre el 1 de diciembre de 2010 y
 | `prepared/transactions.parquet` | 541 909 | el mismo contenido, en formato Parquet |
 | `prepared/customers.csv` | 4 372 | un cliente identificado |
 | `prepared/products.csv` | 4 070 | un código de producto |
+| `prepared/transactions_clean.parquet` | 536 641 | una línea de venta del dataset completo, limpia con las reglas de la semana 6 |
 | `teaching/retail_small.csv` | 3 108 | una línea de venta del 1 de diciembre de 2010 |
 | `teaching/retail_small.xlsx` | 3 108 | el mismo contenido, en Excel |
 | `teaching/retail_dirty.csv` | 22 312 | una línea de venta de 1 000 facturas reales, con problemas de calidad |
 | `teaching/retail_clean_reference.csv` | 21 990 | el resultado esperado de limpiar `retail_dirty` |
 | `teaching/retail_dirty_log.csv` | 3 266 | una alteración pedagógica introducida en `retail_dirty` |
+| `teaching/retail_dirty_practica.csv` | 12 408 | una línea de venta de otras 500 facturas reales, para la práctica de limpieza |
+| `teaching/retail_clean_reference_practica.csv` | 12 243 | el resultado esperado de limpiar `retail_dirty_practica` |
+| `teaching/retail_dirty_practica_log.csv` | 2 053 | una alteración pedagógica introducida en `retail_dirty_practica` |
 
 ## Columnas
 
@@ -87,6 +91,21 @@ Ventas de una tienda en línea del Reino Unido entre el 1 de diciembre de 2010 y
 
 `retail_clean_reference.csv` es el resultado de la limpieza documentada en el Colab de la semana 6. Se verificó que recupera los valores originales de `transactions` en todas las líneas conservadas; las únicas diferencias son las estandarizaciones (texto sin espacios y en mayúscula, códigos en mayúscula), las 307 líneas duplicadas eliminadas y las columnas agregadas (`SinCliente`, `Importe` sin redondear, `EsCancelada`, `EsProducto`, `EsDevolucion` —cantidad negativa en factura cancelada—, `EsAjusteInventario` —cantidad negativa en factura no cancelada— y `EsVenta` —cantidad y precio positivos en un código de producto—).
 
+### `retail_dirty_practica`
+
+Contiene todas las líneas de otras 500 facturas reales (12 380 líneas), elegidas con la semilla 202 y sin repetir ninguna factura de `retail_dirty`. Tiene los mismos tipos de problema, en menor cantidad, y además variantes que no aparecen en `retail_dirty`, para que la práctica exija diagnosticar antes de reutilizar el código:
+
+- países escritos como `U.K.`, `Deutschland`, `FRANCE` y `Eire`;
+- precios con la moneda escrita (`0.85 GBP`);
+- el guion (`-`) como faltante disfrazado de `CustomerID`;
+- fechas en formato `AAAA/MM/DD hh:mm`.
+
+`retail_clean_reference_practica.csv` se verificó contra `transactions` del mismo modo que `retail_clean_reference.csv`.
+
+## `transactions_clean`: el dataset completo limpio
+
+`prepared/transactions_clean.parquet` aplica a `transactions` las reglas de limpieza de la semana 6. Como el archivo no tiene alteraciones pedagógicas, solo se corrigen los problemas reales: descripciones `?` convertidas en faltantes y recuperadas desde `products`, descripciones y códigos estandarizados (sin espacios, en mayúscula), `CustomerID` como `Int64`, eliminación de 5 268 duplicados exactos y las columnas `SinCliente`, `Importe`, `EsCancelada`, `EsProducto`, `EsDevolucion`, `EsAjusteInventario` y `EsVenta`. Se conserva `LineID`. Al ser Parquet, `InvoiceDate` se lee como fecha.
+
 ## Lectura
 
 ```python
@@ -102,6 +121,7 @@ transacciones = pd.read_csv(URL_DATOS + "prepared/transactions.csv")
 |---|---|
 | `prepared/transactions.csv` | `c35975c40d0e1e105090fbb11188a409393055f873841bd012915475fc84e69f` |
 | `prepared/transactions.parquet` | `fcb003532d9ce3d50d11cc97982125fa39289efbbb5a6a0ebc30ad75e8402b08` |
+| `prepared/transactions_clean.parquet` | `ec205951aeca0745fe897aba7a3f0469bd3b2ed29b3de74b2dbe8aafea747d4f` |
 | `prepared/customers.csv` | `d93085cf95bf7b74f8c94e88971ecc217f06ebb2b0f7d8b2106ae63f2d566978` |
 | `prepared/products.csv` | `198d9bb25a8f5c28b107040678e7d7b9b89ab3937f41f7045c43f9991de12c12` |
 | `teaching/retail_small.csv` | `45ca8842daf556b96947109ad92d666391410a2a3e894bab7644773d1ff539b3` |
@@ -109,3 +129,6 @@ transacciones = pd.read_csv(URL_DATOS + "prepared/transactions.csv")
 | `teaching/retail_dirty.csv` | `c0036b4ae2c1da1621cb16cfe5bf29e931888572216465459ca3fda34d829e38` |
 | `teaching/retail_clean_reference.csv` | `6fadb3682a1b6b661fb99febf8150b1e5bfe5c92a8fae05ba8d4937195e8a19b` |
 | `teaching/retail_dirty_log.csv` | `ba8d138499995dde6a442e375e73e7e3a19851fd65e5ca8d2fcc34e4cd3f5a23` |
+| `teaching/retail_dirty_practica.csv` | `6d788b44af996a5cae7e0a3aa4c34587b607320f6886934f2960c5d7bb0659b5` |
+| `teaching/retail_clean_reference_practica.csv` | `ed5bd0c71bfaa590649fda56fce38335795ce339cceda8579c5bd6f77b0885f6` |
+| `teaching/retail_dirty_practica_log.csv` | `b81e496cae95b6ba4f1df4c2c7c91704db622a4b5e3c78a6c762c426ce2af7ee` |
